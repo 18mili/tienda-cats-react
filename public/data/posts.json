@@ -1,0 +1,16 @@
+[
+  {
+    "id": 1,
+    "titulo": "Cómo elegir el alimento ideal",
+    "resumen": "Tips para seleccionar alimento según la edad y actividad de tu gato.",
+    "imagen": "/assets/blog1.jpg",
+    "fecha": "2025-10-01"
+  },
+  {
+    "id": 2,
+    "titulo": "Juguetes que estimulan la mente",
+    "resumen": "Ideas para mantener activo a tu felino en casa.",
+    "imagen": "/assets/blog2.jpg",
+    "fecha": "2025-09-20"
+  }
+]

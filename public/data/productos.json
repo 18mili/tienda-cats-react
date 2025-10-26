@@ -1,0 +1,6 @@
+[
+  { "id": 1, "nombre": "Alimento Premium", "precio": 8990, "categoria": "alimento", "imagen": "/assets/alimento.png", "descripcion": "Alimento completo para gatos adultos.", "destacado": true },
+  { "id": 2, "nombre": "Juguete Ratón",   "precio": 3990, "categoria": "juguete",  "imagen": "/assets/juguete.jpg",  "descripcion": "Ratón de felpa con catnip.",            "destacado": true },
+  { "id": 3, "nombre": "Rascador Torre",   "precio": 24990,"categoria": "accesorio","imagen": "/assets/rascador.jpg", "descripcion": "Estructura para afilar uñas y jugar.", "destacado": false },
+  { "id": 4, "nombre": "Collar con campana","precio": 5990,"categoria": "accesorio","imagen": "/assets/collar.jpeg",  "descripcion": "Collar ajustable con campanita para tu gato.","destacado": true }
+]
