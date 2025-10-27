@@ -8,6 +8,7 @@ import Carrito from './pages/Carrito'
 // NUEVAS
 import Nosotros from './pages/Nosotros'
 import Blog from './pages/Blog'
+import PostDetalle from './pages/PostDetalle'
 import Login from './pages/Login'
 import Registro from './pages/Registro'
 import Admin from './pages/Admin'
@@ -24,6 +25,7 @@ export default function App() {
         {/* NUEVAS */}
         <Route path="/nosotros" element={<Nosotros />} />
         <Route path="/blog" element={<Blog />} />
+        <Route path="/blog/:id" element={<PostDetalle />} />
         <Route path="/login" element={<Login />} />
         <Route path="/registro" element={<Registro />} />
         <Route path="/admin" element={<Admin />} />

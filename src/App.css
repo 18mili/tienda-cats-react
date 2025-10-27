@@ -40,3 +40,22 @@
 .read-the-docs {
   color: #888;
 }
+
+/* Team member photo wrapper: center image and show it fully */
+.team-photo {
+  height: 180px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  background: #fff;
+  border-top-left-radius: .25rem;
+  border-top-right-radius: .25rem;
+}
+.team-photo img {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  object-position: center;
+  display: block;
+}

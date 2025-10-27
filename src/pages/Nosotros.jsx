@@ -3,10 +3,11 @@ import AboutHero from '../components/AboutHero'
 import TeamMemberCard from '../components/TeamMemberCard'
 
 export default function Nosotros() {
+  // Equipo: reemplazado por los dos miembros solicitados
+  // Asunción: roles razonables asignados (puedes cambiarlos si prefieres otros)
   const equipo = [
-    { nombre: 'Mila', rol: 'Fundadora',  foto: '/assets/team1.jpg' },
-    { nombre: 'Luna', rol: 'Atención',   foto: '/assets/team2.jpg' },
-    { nombre: 'Tom',  rol: 'Compras',    foto: '/assets/team3.jpg' },
+    { nombre: 'Milagros Honorios', rol: 'Fundadora y Product Owner', foto: '/assets/team1.jpg' },
+    { nombre: 'Ever Valenzuela', rol: 'Coordinador y Product Manager', foto: '/assets/team2.jpg' },
   ]
   return (
     <>

@@ -1,4 +1,5 @@
 import { Card, Button } from 'react-bootstrap'
+import { Link } from 'react-router-dom'
 
 export default function PostCard({ post }) {
   return (
@@ -10,7 +11,9 @@ export default function PostCard({ post }) {
         <small className="text-muted mb-2">{new Date(post.fecha).toLocaleDateString()}</small>
         <p className="flex-grow-1">{post.resumen}</p>
         <div className="d-flex gap-2 mt-2 botones-ocultos">
-          <Button variant="outline-secondary" size="sm">Leer más</Button>
+          <Link to={`/blog/${post.id}`}>
+            <Button variant="outline-secondary" size="sm">Leer más</Button>
+          </Link>
           <Button variant="primary" size="sm">Compartir</Button>
         </div>
       </Card.Body>
