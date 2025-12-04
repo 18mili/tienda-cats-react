@@ -1,18 +1,29 @@
+import { db } from '../firebase'
+import { collection, getDocs } from 'firebase/firestore'
+
 export async function getProductos() {
-  const resp = await fetch('/data/productos.json')
-  const base = await resp.json()
-  // Si hay productos agregados desde la UI admin, únelos
   try {
-    const demoRaw = localStorage.getItem('productos_demo')
-    if (demoRaw) {
-      const demo = JSON.parse(demoRaw)
-      // prepend demo products so admin-added appear first
-      return [...demo, ...base]
-    }
+    // Traer productos desde la colección principal 'productos' en Firestore
+    const col = collection(db, 'productos')
+    const snap = await getDocs(col)
+    const fbProductos = snap.docs.map(d => ({ id: d.id, ...d.data() }))
+    
+    // Traer también productos creados por admin desde 'productos_demo'
+    const colDemo = collection(db, 'productos_demo')
+    const snapDemo = await getDocs(colDemo)
+    const demo = snapDemo.docs.map(d => ({ id: d.id, ...d.data() }))
+    
+    // Combinar: admin products primero, luego productos principales
+    return [...demo, ...fbProductos]
   } catch (e) {
-    // ignore parse errors
+    console.error('Error fetching productos:', e)
+    try {
+      const resp = await fetch('/data/productos.json')
+      return await resp.json()
+    } catch (fallbackErr) {
+      return []
+    }
   }
-  return base
 }
 
 export async function getProductoById(id) {

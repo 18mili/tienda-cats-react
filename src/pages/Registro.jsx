@@ -1,11 +1,13 @@
 import { useState } from 'react'
 import { Form, Button, Card } from 'react-bootstrap'
 import { Link, useNavigate } from 'react-router-dom'
+import { useAuth } from '../context/AuthContext.jsx'
 
 export default function Registro() {
   const [form, setForm] = useState({ nombre: '', email: '', pass: '' })
   const [msg, setMsg] = useState('')
   const navigate = useNavigate()
+  const { register } = useAuth()
 
   const onChange = e => setForm({ ...form, [e.target.name]: e.target.value })
 
@@ -15,11 +17,10 @@ export default function Registro() {
       setMsg('Completa todos los campos.')
       return
     }
-    // Demo: guarda en localStorage y redirige a login
-    const users = JSON.parse(localStorage.getItem('users_demo') || '[]')
-    users.push({ nombre: form.nombre, email: form.email })
-    localStorage.setItem('users_demo', JSON.stringify(users))
-    navigate('/login')
+    // Registrar en Firebase
+    register({ nombre: form.nombre, email: form.email, pass: form.pass })
+      .then(() => navigate('/'))
+      .catch(err => setMsg('Error al registrar: ' + (err.message || err.code || '')))
   }
 
   return (

@@ -4,8 +4,7 @@ import Footer from './Footer'
 
 export default function Layout({ children }) {
   return (
-    // Usamos un contenedor flex columna que ocupa toda la altura
-    // para poder empujar el footer al final con `mt-auto` o `flex-grow-1`.
+
     <div className="d-flex flex-column min-vh-100">
       <NavbarTiendacats />
 
