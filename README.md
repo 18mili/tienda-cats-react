@@ -83,7 +83,7 @@ tienda-cats-react/
 1. Clona el repositorio  
     ```bash
     git clone https://github.com/18mili/tienda-cats-react.git
-    cd tienda-cats-react-main
+    cd tienda-cats-react
 
 2. Instala las dependencias
 
