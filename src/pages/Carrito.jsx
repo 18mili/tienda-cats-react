@@ -1,14 +1,10 @@
 import { Table, Button } from 'react-bootstrap'
 import { useCart } from '../context/CartContext.jsx'
-import { db } from '../firebase'
-import { collection, addDoc } from 'firebase/firestore'
-import { useAuth } from '../context/AuthContext.jsx'
 
 export default function Carrito() {
   const { state, add, decrement, remove, clear } = useCart()
   const items = Object.values(state.items)
   const total = items.reduce((acc, it) => acc + it.precio * it.qty, 0)
-  const { user } = useAuth()
 
   if (items.length === 0) {
     return (
@@ -58,20 +54,22 @@ export default function Carrito() {
         <h4>Total: ${total.toLocaleString()}</h4>
         <div className="d-flex gap-2">
           <Button variant="outline-danger" onClick={clear}>Vaciar carrito</Button>
-          <Button variant="primary" onClick={async () => {
+          <Button variant="primary" onClick={() => {
+            // Crear orden demo y guardarla en localStorage
             const order = {
+              id: Date.now(),
               createdAt: new Date().toISOString(),
-              buyer: user?.email || 'guest',
+              buyer: JSON.parse(localStorage.getItem('auth_demo') || 'null')?.email || 'guest',
               items: state.items,
               total: items.reduce((acc, it) => acc + it.precio * it.qty, 0)
             }
-            try {
-              await addDoc(collection(db, 'orders'), order)
-              clear()
-              alert('Compra registrada. ¡Gracias!')
-            } catch (e) {
-              alert('Error al crear la orden: ' + (e.message || ''))
-            }
+            const raw = localStorage.getItem('orders_demo')
+            const arr = raw ? JSON.parse(raw) : []
+            arr.unshift(order)
+            localStorage.setItem('orders_demo', JSON.stringify(arr))
+            try { window.dispatchEvent(new Event('orders_updated')) } catch (e) {}
+            clear()
+            alert('Compra registrada. ¡Gracias! (demo)')
           }}>Comprar</Button>
         </div>
       </div>

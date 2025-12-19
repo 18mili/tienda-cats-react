@@ -1,13 +1,11 @@
 import { useState } from 'react'
 import { Form, Button, Card } from 'react-bootstrap'
 import { Link, useNavigate } from 'react-router-dom'
-import { useAuth } from '../context/AuthContext.jsx'
 
 export default function Login() {
   const [form, setForm] = useState({ email: '', pass: '' })
   const [msg, setMsg] = useState('')
   const navigate = useNavigate()
-  const { login } = useAuth()
 
   const onChange = e => setForm({ ...form, [e.target.name]: e.target.value })
 
@@ -18,13 +16,27 @@ export default function Login() {
       setMsg('Completa email y contraseña.')
       return
     }
-    // Intentar login con Firebase
-    login(form.email, form.pass).then(res => {
-      if (res?.isAdmin) navigate('/admin')
-      else navigate('/')
-    }).catch(err => {
-      setMsg('Error al iniciar sesión: ' + (err.message || err.code || ''))
-    })
+    // Cuenta admin fija (demo)
+    if (form.email === 'admin@tiendacats.com' && form.pass === '1234') {
+      localStorage.setItem('auth_demo', JSON.stringify({ email: form.email, isAdmin: true }))
+      navigate('/admin')
+      return
+    }
+    // Comprueba si hay usuarios registrados en demo (localStorage)
+    const users = JSON.parse(localStorage.getItem('users_demo') || '[]')
+    if (!users || users.length === 0) {
+      setMsg('No existen usuarios. Crea una cuenta primero.')
+      return
+    }
+    const found = users.find(u => u.email === form.email)
+    if (!found) {
+      setMsg('No existe ese usuario.')
+      return
+    }
+
+    // Guardado demo (no real): marca sesión en localStorage
+    localStorage.setItem('auth_demo', JSON.stringify({ email: form.email }))
+    navigate('/')
   }
 
   return (
