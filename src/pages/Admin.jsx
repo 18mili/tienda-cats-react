@@ -2,9 +2,6 @@ import { useEffect, useState } from 'react'
 import { Container, Card, Form, Button, Table, Row, Col } from 'react-bootstrap'
 import { useNavigate } from 'react-router-dom'
 import { getProductos } from '../services/api'
-import { db } from '../firebase'
-import { collection, getDocs, addDoc, deleteDoc, doc, updateDoc } from 'firebase/firestore'
-import { useAuth } from '../context/AuthContext.jsx'
 
 export default function Admin() {
   const [productos, setProductos] = useState([])
@@ -12,123 +9,48 @@ export default function Admin() {
   const [orders, setOrders] = useState([])
   const [form, setForm] = useState({ id: '', nombre: '', precio: '', imagen: '', categoria: '', destacado: false })
   const navigate = useNavigate()
-  const { user, isAdmin } = useAuth()
 
   // Funciones para eliminar items
   const deleteProduct = (id) => {
     if (!window.confirm('¿Eliminar este producto?')) return
-    // intentar eliminar doc en Firestore (si existe) en ambas colecciones
-    ;(async () => {
-      try {
-        await deleteDoc(doc(db, 'productos_demo', String(id)))
-      } catch (e) {
-        // ignore
-      }
-      try {
-        await deleteDoc(doc(db, 'productos', String(id)))
-      } catch (e) {
-        // ignore
-      }
-      // normalizar comparación para evitar mismatches number/string
-      setProductos(prev => prev.filter(p => String(p.id) !== String(id)))
-    })()
+    const raw = localStorage.getItem('productos_demo')
+    if (raw) {
+      const arr = JSON.parse(raw).filter(p => p.id !== id)
+      localStorage.setItem('productos_demo', JSON.stringify(arr))
+      setProductos(prev => prev.filter(p => p.id !== id))
+      window.dispatchEvent(new Event('productos_updated'))
+    }
   }
 
   const deleteUser = (email) => {
     if (!window.confirm('¿Eliminar este usuario?')) return
-    // eliminar usuario por email buscando su doc en users collection
-    ;(async () => {
-      try {
-        const q = await getDocs(collection(db, 'users'))
-        const docs = q.docs
-        for (const d of docs) {
-          const data = d.data()
-          if (data.email === email) {
-            const userId = d.id
-            // eliminar documento de usuario
-            try {
-              await deleteDoc(doc(db, 'users', userId))
-            } catch (e) {
-              console.error('Error deleting user doc:', e)
-            }
-            // eliminar carrito asociado
-            try {
-              await deleteDoc(doc(db, 'carritos', userId))
-            } catch (e) {
-              console.error('Error deleting user cart:', e)
-            }
-            break
-          }
-        }
-        setUsers(prev => prev.filter(u => u.email !== email))
-        alert('Usuario eliminado correctamente.')
-      } catch (e) {
-        console.error('Error deleting user:', e)
-        alert('Error al eliminar usuario: ' + (e.message || ''))
-      }
-    })()
-  }
-
-  const toggleAdmin = async (userId, currentStatus) => {
-    if (!userId) return
-    // Evitar que un admin se revoque a sí mismo
-    if (String(userId) === String(user?.uid) && currentStatus === true) {
-      alert('No puedes revocar tus propios permisos de administrador.')
-      return
-    }
-    const action = currentStatus ? 'revocar permisos de admin' : 'promover a admin'
-    if (!window.confirm(`¿Deseas ${action} para este usuario?`)) return
-    try {
-      await updateDoc(doc(db, 'users', String(userId)), { isAdmin: !currentStatus })
-      setUsers(prev => prev.map(u => u.id === userId ? { ...u, isAdmin: !currentStatus } : u))
-    } catch (e) {
-      console.error('Error updating isAdmin', e)
-      alert('Error al actualizar rol: ' + (e.message || ''))
-    }
+    const arr = users.filter(u => u.email !== email)
+    localStorage.setItem('users_demo', JSON.stringify(arr))
+    setUsers(arr)
   }
 
   const deleteOrder = (id) => {
     if (!window.confirm('¿Eliminar esta compra?')) return
-    ;(async () => {
-      try {
-        await deleteDoc(doc(db, 'orders', String(id)))
-      } catch (e) {}
-      setOrders(prev => prev.filter(o => String(o.id) !== String(id)))
-    })()
+    const arr = orders.filter(o => o.id !== id)
+    localStorage.setItem('orders_demo', JSON.stringify(arr))
+    setOrders(arr)
   }
 
   useEffect(() => {
     // proteger ruta: solo admin
-    if (!user || !isAdmin) {
-      navigate('/')
-      return
-    }
+    const auth = JSON.parse(localStorage.getItem('auth_demo') || 'null')
+    if (!auth || !auth.isAdmin) navigate('/')
 
-    // cargar recursos
+    // cargar recursos demo
     getProductos().then(setProductos)
+    setUsers(JSON.parse(localStorage.getItem('users_demo') || '[]'))
+    setOrders(JSON.parse(localStorage.getItem('orders_demo') || '[]'))
 
-    // cargar usuarios desde Firestore
-    ;(async () => {
-      try {
-        const uSnap = await getDocs(collection(db, 'users'))
-        setUsers(uSnap.docs.map(d => ({ id: d.id, ...d.data() })))
-      } catch (e) {
-        setUsers([])
-      }
-    })()
-
-    // cargar órdenes desde Firestore
-    ;(async () => {
-      try {
-        const oSnap = await getDocs(collection(db, 'orders'))
-        setOrders(oSnap.docs.map(d => ({ id: d.id, ...d.data() })))
-      } catch (e) {
-        setOrders([])
-      }
-    })()
-
-    return () => {}
-  }, [user, isAdmin, navigate])
+    // escuchar nuevas órdenes que se creen desde Carrito
+    const onOrders = () => setOrders(JSON.parse(localStorage.getItem('orders_demo') || '[]'))
+    window.addEventListener('orders_updated', onOrders)
+    return () => window.removeEventListener('orders_updated', onOrders)
+  }, [])
 
   const onChange = e => {
     const { name, value, type, checked } = e.target
@@ -139,33 +61,25 @@ export default function Admin() {
     e.preventDefault()
     // crear id si no hay
     const prod = { ...form }
+    if (!prod.id) prod.id = Date.now()
     prod.precio = Number(prod.precio) || 0
-    ;(async () => {
-      try {
-        if (prod.hasOwnProperty('id')) delete prod.id
-        const ref = await addDoc(collection(db, 'productos_demo'), prod)
-        try { await updateDoc(doc(db, 'productos_demo', ref.id), { id: ref.id }) } catch (e) {}
-        const newProd = { id: ref.id, ...prod }
-        setProductos(prev => [newProd, ...prev])
-      } catch (e) {
-        const fallback = { id: Date.now(), ...prod }
-        setProductos(prev => [fallback, ...prev])
-      }
-      setForm({ id: '', nombre: '', precio: '', imagen: '', categoria: '', destacado: false })
-    })()
+
+    const raw = localStorage.getItem('productos_demo')
+    const arr = raw ? JSON.parse(raw) : []
+    arr.unshift(prod)
+    localStorage.setItem('productos_demo', JSON.stringify(arr))
+    setProductos(prev => [prod, ...prev])
+    // notificar a la app para que otras vistas (Home/Catalogo) puedan refrescar
+    try { window.dispatchEvent(new Event('productos_updated')) } catch (e) {}
+    setForm({ id: '', nombre: '', precio: '', imagen: '', categoria: '', destacado: false })
   }
-
-  
-
 
   return (
     <Container className="container-xxl">
-        <div className="d-flex align-items-center justify-content-between mb-4">
-              <h2 className="m-0">Panel de administración</h2>
-            </div>
+      <h2 className="mb-4">Panel de administración</h2>
 
       <Row className="g-4">
-        <Col md={4} lg={3}>
+        <Col md={6} lg={4}>
           <Card className="p-3">
             <h5>Agregar producto</h5>
             <Form onSubmit={addProduct}>
@@ -198,48 +112,39 @@ export default function Admin() {
           </Card>
         </Col>
 
-        <Col md={5} lg={5}>
+        <Col md={6} lg={4}>
           <Card className="p-3">
             <h5>Usuarios registrados</h5>
             {users.length === 0 ? (
               <div>No hay usuarios registrados.</div>
             ) : (
-              <div className="table-responsive">
               <Table size="sm" bordered>
                 <thead>
-                      <tr>
-                        <th>Nombre</th>
-                        <th>Email</th>
-                        <th>Rol</th>
-                        <th>Acciones</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {users.map((u, i) => (
-                        <tr key={u.id || i}>
-                          <td>{u.nombre}</td>
-                          <td>{u.email}</td>
-                          <td>{u.isAdmin ? <strong>Admin</strong> : 'Usuario'}</td>
-                          <td>
-                            <div className="d-flex gap-2">
-                              <Button variant={u.isAdmin ? 'outline-warning' : 'outline-success'} size="sm" onClick={() => toggleAdmin(u.id, !!u.isAdmin)}>
-                                {u.isAdmin ? 'Revocar admin' : 'Promover admin'}
-                              </Button>
-                              <Button variant="danger" size="sm" onClick={() => deleteUser(u.email)}>
-                                Eliminar
-                              </Button>
-                            </div>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
+                  <tr>
+                    <th>Nombre</th>
+                    <th>Email</th>
+                    <th>Acciones</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {users.map((u, i) => (
+                    <tr key={i}>
+                      <td>{u.nombre}</td>
+                      <td>{u.email}</td>
+                      <td>
+                        <Button variant="danger" size="sm" onClick={() => deleteUser(u.email)}>
+                          Eliminar
+                        </Button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
               </Table>
-              </div>
             )}
           </Card>
         </Col>
 
-        <Col md={3} lg={4}>
+        <Col md={12} lg={4}>
           <Card className="p-3">
             <h5>Compras / Pedidos</h5>
             {orders.length === 0 ? (

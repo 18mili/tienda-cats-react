@@ -4,27 +4,37 @@ import { Navbar, Nav, Container, Badge } from 'react-bootstrap'
 import { NavLink, useNavigate } from 'react-router-dom'
 import { useCart } from '../context/CartContext.jsx'
 import { FaShoppingCart } from 'react-icons/fa'
-import { useAuth } from '../context/AuthContext.jsx'
 
 export default function NavbarTiendacats() {
   const { count } = useCart()
   const [user, setUser] = useState(null)
   const navigate = useNavigate()
   const location = useLocation()
-  const { user: authUser, isAdmin, logout: authLogout } = useAuth()
 
-  // sincronizar con AuthContext
+  // Al montar, revisa si hay usuario logueado
+  // Re-evalúa el usuario cuando cambia la ruta (p. ej. después de loguear)
   useEffect(() => {
-    setUser(authUser)
-  }, [authUser, location])
+    const saved = localStorage.getItem('auth_demo')
+    setUser(saved ? JSON.parse(saved) : null)
+  }, [location])
+
+  // También actualiza si otro tab cambia el localStorage
+  useEffect(() => {
+    const onStorage = (e) => {
+      if (e.key === 'auth_demo') {
+        const saved = localStorage.getItem('auth_demo')
+        setUser(saved ? JSON.parse(saved) : null)
+      }
+    }
+    window.addEventListener('storage', onStorage)
+    return () => window.removeEventListener('storage', onStorage)
+  }, [])
 
   // Función para cerrar sesión
-  const logout = async () => {
-    try {
-      await authLogout()
-    } catch (e) {}
+  const logout = () => {
+    localStorage.removeItem('auth_demo')
     setUser(null)
-    navigate('/')
+    navigate('/') // vuelve al inicio
   }
 
   return (
@@ -44,8 +54,8 @@ export default function NavbarTiendacats() {
         {/* Saludo junto al logo (izquierda) */}
         {user && (
           <div className="d-flex align-items-center ms-2 d-none d-md-flex">
-            <small className="text-light">Hola, {user.email?.split('@')[0]}</small>
-            {isAdmin && (
+            <small className="text-light">Hola, {user.email.split('@')[0]}</small>
+            {user.isAdmin && (
               <Nav.Link as={NavLink} to="/admin" className="p-0 ms-3 text-light small">
                 Admin
               </Nav.Link>
