@@ -147,7 +147,7 @@ Diseño Responsive: React-Bootstrap y CSS customizado.
 
 | Email                               | Contraseña | Nombre   |
 | ----------------------------------- | ---------- | -------- |
-| [admin@tiendacats.com]                      | 123456       | Admin |
+| [admin@ctiedacats.com]                      | 123456       | Admin |
 
 También puedes registrarte con un nuevo usuario.
 
